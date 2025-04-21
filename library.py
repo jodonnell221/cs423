@@ -489,11 +489,9 @@ class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
       assert self.inner_low is not None and self.inner_high is not None, "TukeyTransformer.fit has not been called."
       
       X_ = X.copy()
-      if self.fence == 'inner':
-        print(f'INNER: {self.inner_low, self.inner_high}')
+      if self.fence == 'inner':  
         X_[self.target_column] = X_[self.target_column].clip(lower=self.inner_low, upper=self.inner_high)
       elif self.fence == 'outer':
-        print(f'OUTER: {self.outer_low, self.outer_high}')
         X_[self.target_column] = X_[self.target_column].clip(lower=self.outer_low, upper=self.outer_high)
       #X_[self.target_column] = X_[self.target_column].clip(lower=self.low_wall, upper=self.high_wall)
       X_.reset_index(drop=True)
@@ -508,6 +506,62 @@ class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
       return result
 
 
+class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
+    """
+    A transformer that applies 3-sigma clipping to a specified column in a pandas DataFrame.
+
+    This transformer follows the scikit-learn transformer interface and can be used in
+    a scikit-learn pipeline. It clips values in the target column to be within three standard
+    deviations from the mean.
+
+    Parameters
+    ----------
+    target_column : Hashable
+        The name of the column to apply 3-sigma clipping on.
+
+    Attributes
+    ----------
+    high_wall : Optional[float]
+        The upper bound for clipping, computed as mean + 3 * standard deviation.
+    low_wall : Optional[float]
+        The lower bound for clipping, computed as mean - 3 * standard deviation.
+    """
+    def __init__(self, target_column: str) -> None:
+      self.target_column: str = target_column 
+      self.high_wall: Optional[float] = None
+      self.low_wall: Optional[float] = None
+      return 
+    
+    def fit(self, X: pd.DataFrame, y: Optional[Iterable] = None) -> Self:
+      assert self.target_column in X.columns, f'unknown column {self.target_column}'
+      #q1 = X[self.target_column].quantile(0.25)
+      #q3 = X[self.target_column].quantile(0.75)
+      #iqr = q3-q1
+      #self.low_wall = q1-3*iqr
+      #self.high_wall = q3+3*iqr
+      mean = X[self.target_column].mean()
+      std = X[self.target_column].std()
+
+  # Compute the low and high boundaries
+      self.low_wall = mean - 3 * std
+      self.high_wall = mean + 3 * std
+      return X
+      
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+      assert self.low_wall is not None and self.high_wall is not None, "Sigma3Transformer.transform called before fit."
+      X_ = X.copy()
+      X_[self.target_column] = X_[self.target_column].clip(lower=self.low_wall, upper=self.high_wall)
+      X_.reset_index(drop=True)
+      return X_
+
+
+      return 
+
+    def fit_transform(self, X: pd.DataFrame, y: Optional[Iterable] = None) -> pd.DataFrame:
+      result: pd.DataFrame = self.fit(X)
+      result: pd.DataFrame = self.transform(X)
+      return result
+
     
 customer_transformer = Pipeline(steps=[
     #fill in the steps on your own
@@ -516,6 +570,7 @@ customer_transformer = Pipeline(steps=[
     ('gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
     ('os', CustomOHETransformer('OS')),
     ('isp', CustomOHETransformer('ISP')),
+    ('time spent', CustomTukeyTransformer('Time Spent', 'inner')),
     ], verbose=True)
 
 titanic_transformer = Pipeline(steps=[
