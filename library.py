@@ -101,7 +101,7 @@ class CustomOHETransformer(BaseEstimator, TransformerMixin):
             If X is not a pandas DataFrame or if target_column is not in X.
         """
         assert isinstance(X, pd.core.frame.DataFrame), f'{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead.'
-        warnings.filterwarnings('ignore', message='.*downcasting.*')  #squash warning in replace method below
+        #warnings.filterwarnings('ignore', message='.*downcasting.*')  #squash warning in replace method below
         assert self.target_column in X.columns.to_list(), f'{self.__class__.__name__}.transform unknown column "{self.target_column}"'
 
         X_: pd.DataFrame = X.copy()
@@ -248,7 +248,7 @@ class CustomDropColumnsTransformer(BaseEstimator, TransformerMixin):
             is not in the DataFrame.
         """
         assert isinstance(X, pd.core.frame.DataFrame), f'{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead.'
-        warnings.filterwarnings('ignore', message='.*downcasting.*')  #squash warning in replace method below
+        #warnings.filterwarnings('ignore', message='.*downcasting.*')  #squash warning in replace method below
         missing_keys = set(self.column_list) - set(X)
 
         X_: pd.DataFrame = X.copy()
@@ -393,7 +393,7 @@ class CustomMappingTransformer(BaseEstimator, TransformerMixin):
         """
         assert isinstance(X, pd.core.frame.DataFrame), f'{self.__class__.__name__}.transform expected Dataframe but got {type(X)} instead.'
         assert self.mapping_column in X.columns.to_list(), f'{self.__class__.__name__}.transform unknown column "{self.mapping_column}"'  #column legit?
-        warnings.filterwarnings('ignore', message='.*downcasting.*')  #squash warning in replace method below
+        #warnings.filterwarnings('ignore', message='.*downcasting.*')  #squash warning in replace method below
 
         #now check to see if all keys are contained in column
         column_set: Set[Any] = set(X[self.mapping_column].unique())
