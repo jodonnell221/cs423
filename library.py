@@ -432,11 +432,88 @@ class CustomMappingTransformer(BaseEstimator, TransformerMixin):
         result: pd.DataFrame = self.transform(X)
         return result
     
+class CustomTukeyTransformer(BaseEstimator, TransformerMixin):
+    """
+    A transformer that applies Tukey's fences (inner or outer) to a specified column in a pandas DataFrame.
+
+    This transformer follows the scikit-learn transformer interface and can be used in a scikit-learn pipeline.
+    It clips values in the target column based on Tukey's inner or outer fences.
+
+    Parameters
+    ----------
+    target_column : Hashable
+        The name of the column to apply Tukey's fences on.
+    fence : Literal['inner', 'outer'], default='outer'
+        Determines whether to use the inner fence (1.5 * IQR) or the outer fence (3.0 * IQR).
+
+    Attributes
+    ----------
+    inner_low : Optional[float]
+        The lower bound for clipping using the inner fence (Q1 - 1.5 * IQR).
+    outer_low : Optional[float]
+        The lower bound for clipping using the outer fence (Q1 - 3.0 * IQR).
+    inner_high : Optional[float]
+        The upper bound for clipping using the inner fence (Q3 + 1.5 * IQR).
+    outer_high : Optional[float]
+        The upper bound for clipping using the outer fence (Q3 + 3.0 * IQR).
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({'values': [10, 15, 14, 20, 100, 5, 7]})
+    >>> tukey_transformer = CustomTukeyTransformer(target_column='values', fence='inner')
+    >>> transformed_df = tukey_transformer.fit_transform(df)
+    >>> transformed_df
+    """
+    def __init__(self, target_column: str, fence : Literal['inner', 'outer'], default='outer') -> None:
+      self.target_column: str = target_column 
+      self.fence = fence
+      self.inner_low: Optional[float] = None
+      self.outer_low: Optional[float] = None
+      self.inner_high: Optional[float] = None
+      self.outer_high: Optional[float] = None
+      return 
+    
+    def fit(self, X: pd.DataFrame, y: Optional[Iterable] = None) -> Self:
+      assert self.target_column in X.columns, f'unknown column {self.target_column}'
+      q1 = X[self.target_column].quantile(0.25)
+      q3 = X[self.target_column].quantile(0.75)
+      iqr = q3-q1
+      self.inner_low = q1-1.5*iqr
+      self.outer_low = q1-3.0*iqr
+      self.inner_high = q3+1.5*iqr
+      self.outer_high = q3+3.0*iqr
+      return X
+      
+    def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+      assert self.inner_low is not None and self.inner_high is not None, "TukeyTransformer.fit has not been called."
+      
+      X_ = X.copy()
+      if self.fence == 'inner':
+        print(f'INNER: {self.inner_low, self.inner_high}')
+        X_[self.target_column] = X_[self.target_column].clip(lower=self.inner_low, upper=self.inner_high)
+      elif self.fence == 'outer':
+        print(f'OUTER: {self.outer_low, self.outer_high}')
+        X_[self.target_column] = X_[self.target_column].clip(lower=self.outer_low, upper=self.outer_high)
+      #X_[self.target_column] = X_[self.target_column].clip(lower=self.low_wall, upper=self.high_wall)
+      X_.reset_index(drop=True)
+      return X_
+
+
+      
+
+    def fit_transform(self, X: pd.DataFrame, y: Optional[Iterable] = None) -> pd.DataFrame:
+      result: pd.DataFrame = self.fit(X)
+      result: pd.DataFrame = self.transform(X)
+      return result
+
+
+    
 customer_transformer = Pipeline(steps=[
     #fill in the steps on your own
     ('drop', CustomDropColumnsTransformer(['ID'], 'drop')),
-    ('gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
     ('experience', CustomMappingTransformer('Experience Level', {'low': 0, 'medium': 1, 'high': 2})),
+    ('gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
     ('os', CustomOHETransformer('OS')),
     ('isp', CustomOHETransformer('ISP')),
     ], verbose=True)
@@ -445,7 +522,10 @@ titanic_transformer = Pipeline(steps=[
     ('gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
     ('class', CustomMappingTransformer('Class', {'Crew': 0, 'C3': 1, 'C2': 2, 'C1': 3})),
     ('joined', CustomOHETransformer('Joined')),
+    ('fare', CustomTukeyTransformer(target_column='Fare', fence='outer')),
     #add your new ohe step below
 
 
     ], verbose=True)
+
+
