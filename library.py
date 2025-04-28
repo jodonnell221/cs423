@@ -561,6 +561,60 @@ class CustomSigma3Transformer(BaseEstimator, TransformerMixin):
       result: pd.DataFrame = self.fit(X)
       result: pd.DataFrame = self.transform(X)
       return result
+    
+class CustomRobustTransformer(BaseEstimator, TransformerMixin):
+  """Applies robust scaling to a specified column in a pandas DataFrame.
+    This transformer calculates the interquartile range (IQR) and median
+    during the `fit` method and then uses these values to scale the
+    target column in the `transform` method.
+
+    Parameters
+    ----------
+    column : str
+        The name of the column to be scaled.
+
+    Attributes
+    ----------
+    target_column : str
+        The name of the column to be scaled.
+    iqr : float
+        The interquartile range of the target column.
+    med : float
+        The median of the target column.
+        value_new = (value – median) / iqr #iqr = q3-q1
+  """
+  def __init__(self, column):
+      self.target_column = column
+      self.iqr = None 
+      self.med = None
+      return 
+
+  def fit(self, X: pd.DataFrame) -> Self:
+      assert self.target_column in X.columns, f'unknown column {self.target_column}'
+      new_col = X[self.target_column].tolist()
+      new_col = [x for x in new_col if not math.isnan(x)]
+      self.med = statistics.median(new_col)
+      q1 = np.percentile(new_col, 25)
+      q3 = np.percentile(new_col, 75)
+      self.iqr = q3 - q1
+
+  # Compute the low and high boundaries
+      return X
+
+  def transform(self, X: pd.DataFrame) -> pd.DataFrame:
+      assert self.med is not None and self.iqr is not None, f'Transform called before Fit'
+      X_ = X.copy()
+      if self.iqr != 0:
+        X_[self.target_column] = (X_[self.target_column] - self.med) / self.iqr
+      X_.reset_index(drop=True)
+      return X_
+
+
+  def fit_transform(self, X: pd.DataFrame, y: Optional[Iterable] = None) -> pd.DataFrame:
+      result: pd.DataFrame = self.fit(X)
+      result: pd.DataFrame = self.transform(X)
+      return result
+  
 
     
 customer_transformer = Pipeline(steps=[
