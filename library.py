@@ -615,6 +615,47 @@ class CustomRobustTransformer(BaseEstimator, TransformerMixin):
       result: pd.DataFrame = self.fit(X)
       result: pd.DataFrame = self.transform(X)
       return result
+
+
+class CustomKNNTransformer(BaseEstimator, TransformerMixin):
+  """Imputes missing values using KNN.
+
+  This transformer wraps the KNNImputer from scikit-learn and hard-codes
+  add_indicator to be False. It also ensures that the input and output
+  are pandas DataFrames.
+
+  Parameters
+  ----------
+  n_neighbors : int, default=5
+      Number of neighboring samples to use for imputation.
+  weights : {'uniform', 'distance'}, default='uniform'
+      Weight function used in prediction. Possible values:
+      "uniform" : uniform weights. All points in each neighborhood
+      are weighted equally.
+      "distance" : weight points by the inverse of their distance.
+      in this case, closer neighbors of a query point will have a
+      greater influence than neighbors which are further away.
+  """
+  #your code below
+  def __init__(self, n_neighbors=5, weights='uniform'):
+    self.n_neighbors = n_neighbors
+    self.weights = weights
+    self.knn_imputer = None
+
+  def fit(self, X, y=None):
+    self.knn_imputer = KNNImputer(n_neighbors=self.n_neighbors, weights=self.weights, add_indicator=False)
+    self.knn_imputer.fit(X)
+    return X
+
+  def transform(self, X, y=None):
+    assert self.knn_imputer is not None, "NotFittedError: This CustomKNNTransformer instance is not fitted yet. Call 'fit' with appropriate arguments before using this estimator."
+    return pd.DataFrame(self.knn_imputer.transform(X), columns=X.columns) 
+  
+  def fit_transform(self, X, y=None):
+    result: pd.DataFrame = self.fit(X)
+    result: pd.DataFrame = self.transform(X)
+    return result
+    
   
 
     
@@ -625,9 +666,12 @@ customer_transformer = Pipeline(steps=[
     ('gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
     ('os', CustomOHETransformer('OS')),
     ('isp', CustomOHETransformer('ISP')),
-    ('time spent', CustomTukeyTransformer('Time Spent', 'inner')),
+    ('time spent', CustomRobustTransformer('Time Spent')),
+    ('age', CustomRobustTransformer('Age')),
+    ('imputer', CustomKNNTransformer(n_neighbors=5, weights='distance')),
     ], verbose=True)
 
+    
 titanic_transformer = Pipeline(steps=[
     ('gender', CustomMappingTransformer('Gender', {'Male': 0, 'Female': 1})),
     ('class', CustomMappingTransformer('Class', {'Crew': 0, 'C3': 1, 'C2': 2, 'C1': 3})),
