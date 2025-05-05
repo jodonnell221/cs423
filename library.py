@@ -11,6 +11,7 @@ import statistics, math
 import warnings
 from sklearn.metrics import f1_score
 from sklearn.neighbors import KNeighborsClassifier  #the KNN model
+from sklearn.model_selection import train_test_split
 sklearn.set_config(transform_output="pandas")  #says pass pandas tables through pipeline instead of numpy matrices
 
 class CustomOHETransformer(BaseEstimator, TransformerMixin):
