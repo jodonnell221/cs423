@@ -584,8 +584,8 @@ class CustomRobustTransformer(BaseEstimator, TransformerMixin):
         The median of the target column.
         value_new = (value – median) / iqr #iqr = q3-q1
   """
-  def __init__(self, column):
-      self.target_column = column
+  def __init__(self, target_column):
+      self.target_column = target_column
       self.iqr = None 
       self.med = None
       return 
