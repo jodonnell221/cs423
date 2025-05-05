@@ -644,7 +644,7 @@ class CustomKNNTransformer(BaseEstimator, TransformerMixin):
     self.knn_imputer = None
 
   def fit(self, X, y=None):
-    self.knn_imputer = KNNImputer(n_neighbors=self.n_neighbors, weights=self.weights, add_indicator=False)
+    self.knn_imputer = KNNImputer(n_neighbors=self.n_neighbors, weights=self.weights, add_indicator=True)
     self.knn_imputer.fit(X)
     return X
 
