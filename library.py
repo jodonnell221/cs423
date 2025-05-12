@@ -824,6 +824,27 @@ def find_random_state(
     rs_value: int = np.abs(np.array(Var) - mean_f1_ratio).argmin()  # Index of value closest to mean
 
     return rs_value, Var
+
+def dataset_setup(original_table, label_column_name:str, the_transformer, rs, ts=.2):
+  #your code below
+  tmp_labels = original_table[label_column_name].to_list()
+  x_train, x_test, y_train, y_test = train_test_split(original_table, tmp_labels, test_size=0.2, shuffle=True,
+                                                    random_state=rs, stratify=tmp_labels)
+  x_train_transformed = the_transformer.fit_transform(x_train, y_train)
+  x_test_transformed = the_transformer.transform(x_test)
+  x_train_numpy = x_train_transformed.to_numpy()
+  x_test_numpy = x_test_transformed.to_numpy()
+  y_train_numpy = np.array(y_train)
+  y_test_numpy = np.array(y_test)
+  return x_train_numpy, x_test_numpy, y_train_numpy,  y_test_numpy
+
+def titanic_setup(titanic_table, transformer=titanic_transformer, rs=titanic_variance_based_split, ts=.2):
+  x_train_numpy, x_test_numpy, y_train_numpy,  y_test_numpy = dataset_setup(titanic_table, 'Survived',  transformer, rs, ts)
+  return x_train_numpy, x_test_numpy, y_train_numpy,  y_test_numpy
+
+def customer_setup(customer_table, transformer=customer_transformer, rs=customer_variance_based_split, ts=.2):
+  x_train_numpy2, x_test_numpy2, y_train_numpy2,  y_test_numpy2 = dataset_setup(customer_table, 'Rating',  transformer, rs, ts)
+  return x_train_numpy2, x_test_numpy2, y_train_numpy2,  y_test_numpy2
     
   
 titanic_variance_based_split = 107   #add to your library
