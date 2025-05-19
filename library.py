@@ -848,7 +848,9 @@ customer_transformer = Pipeline(steps=[
     ('impute', CustomKNNTransformer(n_neighbors=5)),
     ], verbose=True)
 
-    
+titanic_variance_based_split = 107   #add to your library
+customer_variance_based_split = 113  #add to your library
+       
 
 
 
@@ -874,8 +876,6 @@ def customer_setup(customer_table, transformer=customer_transformer, rs=customer
   return x_train_numpy2, x_test_numpy2, y_train_numpy2,  y_test_numpy2
     
   
-titanic_variance_based_split = 107   #add to your library
-customer_variance_based_split = 113  #add to your library
-    
+
 
 
