@@ -867,7 +867,7 @@ def dataset_setup(original_table, label_column_name:str, the_transformer, rs, ts
   y_test_numpy = np.array(y_test)
   return x_train_numpy, x_test_numpy, y_train_numpy,  y_test_numpy
 
-def titanic_setup(titanic_table, transformer=titanic_transformer, rs=titanic_variance_based_split, ts=.2):
+def titanic_setup(titanic_table, transformer=titanic_transformer, rs=107, ts=.2):
   x_train_numpy, x_test_numpy, y_train_numpy,  y_test_numpy = dataset_setup(titanic_table, 'Survived',  transformer, rs, ts)
   return x_train_numpy, x_test_numpy, y_train_numpy,  y_test_numpy
 
