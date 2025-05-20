@@ -869,7 +869,7 @@ def dataset_setup(original_table, label_column_name:str, the_transformer, rs, ts
   x_train, x_test, y_train, y_test = train_test_split(original_table, tmp_labels, test_size=0.2, shuffle=True,
                                                     random_state=rs, stratify=tmp_labels)
     """
-  tmp_labels = original_table[label_column_name] # Extract the label column (as a Series)
+  tmp_labels = original_table[label_column_name].to_list() # Extract the label column (as a Series)
   tmp_features = original_table.drop(columns=[label_column_name]) # Create features DataFrame by dropping the label column
 
   # Split the dataset
