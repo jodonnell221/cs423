@@ -861,11 +861,25 @@ customer_variance_based_split = 113  #add to your library
 
 def dataset_setup(original_table, label_column_name:str, the_transformer, rs, ts=.2):
   #your code below
+  """
   original_table.drop(label_column_name, axis=1, inplace=True)
   print("DROPPED")
   tmp_labels = original_table[label_column_name].to_list()
+  
   x_train, x_test, y_train, y_test = train_test_split(original_table, tmp_labels, test_size=0.2, shuffle=True,
                                                     random_state=rs, stratify=tmp_labels)
+    """
+  tmp_labels = original_table[label_column_name] # Extract the label column (as a Series)
+  tmp_features = original_table.drop(columns=[label_column_name]) # Create features DataFrame by dropping the label column
+
+  # Split the dataset
+  x_train, x_test, y_train, y_test = train_test_split(
+      tmp_features,    # Use the features DataFrame
+      tmp_labels,      # Use the labels Series
+      test_size=ts,
+      random_state=rs,
+      stratify=tmp_labels # Stratify to maintain label distribution
+  )
   x_train_transformed = the_transformer.fit_transform(x_train, y_train)
   x_test_transformed = the_transformer.transform(x_test)
   x_train_numpy = x_train_transformed.to_numpy()
