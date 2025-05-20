@@ -862,6 +862,7 @@ customer_variance_based_split = 113  #add to your library
 def dataset_setup(original_table, label_column_name:str, the_transformer, rs, ts=.2):
   #your code below
   original_table.drop(label_column_name)
+  print("DROPPED")
   tmp_labels = original_table[label_column_name].to_list()
   x_train, x_test, y_train, y_test = train_test_split(original_table, tmp_labels, test_size=0.2, shuffle=True,
                                                     random_state=rs, stratify=tmp_labels)
